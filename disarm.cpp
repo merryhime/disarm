@@ -75,34 +75,39 @@ void PrintThumbInstruction(std::uint32_t instruction) {
 }
 
 int main(int argc, char** argv) {
-    if (argc < 3 || argc > 4) {
+    if (argc < 3) {
         std::printf("usage: %s <a32/a64/thumb> <instruction_in_hex>\n", argv[0]);
         return 1;
     }
 
-    const char* const hex_instruction = [argv] {
-        if (strlen(argv[2]) > 2 && argv[2][0] == '0' && argv[2][1] == 'x') {
-            return argv[2] + 2;
+    const auto get_instruction = [argv](size_t index) {
+        const char* const hex_instruction = [&] {
+            if (strlen(argv[index]) > 2 && argv[index][0] == '0' && argv[index][1] == 'x') {
+                return argv[index] + 2;
+            }
+            return argv[index];
+        }();
+
+        if (strlen(hex_instruction) > 8) {
+            std::printf("warning: hex string too long\n");
         }
-        return argv[2];
-    }();
 
-    if (strlen(hex_instruction) > 8) {
-        std::printf("hex string too long\n");
-        return 1;
-    }
+        return std::strtol(hex_instruction, nullptr, 16);
+    };
 
-    const std::uint32_t instruction = std::strtol(hex_instruction, nullptr, 16);
+    for (size_t index = 2; index < argc; index++) {
+        const std::uint32_t instruction = get_instruction(index);
 
-    if (std::strcmp(argv[1], "a32") == 0) {
-        PrintA32Instruction(instruction);
-    } else if (std::strcmp(argv[1], "a64") == 0) {
-        PrintA64Instruction(instruction);
-    } else if (std::strcmp(argv[1], "t32") == 0 || strcmp(argv[1], "t16") == 0 || strcmp(argv[1], "thumb") == 0) {
-        PrintThumbInstruction(instruction);
-    } else {
-        std::printf("Invalid mode: %s\nValid values: a32, a64, thumb\n", argv[1]);
-        return 1;
+        if (std::strcmp(argv[1], "a32") == 0) {
+            PrintA32Instruction(instruction);
+        } else if (std::strcmp(argv[1], "a64") == 0) {
+            PrintA64Instruction(instruction);
+        } else if (std::strcmp(argv[1], "t32") == 0 || strcmp(argv[1], "t16") == 0 || strcmp(argv[1], "thumb") == 0) {
+            PrintThumbInstruction(instruction);
+        } else {
+            std::printf("Invalid mode: %s\nValid values: a32, a64, thumb\n", argv[1]);
+            return 1;
+        }
     }
 
     return 0;
